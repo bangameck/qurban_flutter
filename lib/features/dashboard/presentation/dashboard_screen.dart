@@ -4,6 +4,7 @@ import 'dart:developer' as developer;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../auth/data/auth_service.dart';
@@ -430,19 +431,26 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       barrierDismissible: false,
       barrierColor: Colors.black.withValues(alpha: 0.6),
       builder: (context) => BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+        filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
         child: Center(
           child: Container(
             width: MediaQuery.of(context).size.width * 0.85,
             padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 40),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: Colors.white.withValues(alpha: 0.9),
               borderRadius: BorderRadius.circular(40),
+              border: Border.all(color: Colors.white, width: 2),
               boxShadow: [
                 BoxShadow(
                   color: theme.primaryColor.withValues(alpha: 0.3),
                   blurRadius: 50,
                   spreadRadius: 10,
+                ),
+                BoxShadow(
+                  color: Colors.white.withValues(alpha: 0.5),
+                  blurRadius: 20,
+                  spreadRadius: -5,
+                  offset: const Offset(-5, -5),
                 ),
               ],
             ),
@@ -626,6 +634,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
     return Scaffold(
       backgroundColor: const Color(0xFFF4F7F6),
+      drawer: _buildDrawer(context, ref, theme),
       body: dashboardAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (err, stack) => Center(
@@ -702,7 +711,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // BADGE INTERAKTIF (MERAH / HIJAU)
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            // BADGE INTERAKTIF (MERAH / HIJAU)
                         GestureDetector(
                           onTap: () {
                             // Selalu bisa diklik biar kalau mau ganti IP gampang
@@ -760,7 +772,17 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                             ),
                           ),
                         ),
-                        const SizedBox(height: 16),
+                          // TOMBOL BURGER MENU
+                          Builder(
+                            builder: (ctx) => IconButton(
+                              onPressed: () => Scaffold.of(ctx).openDrawer(),
+                              icon: const Icon(Icons.menu_rounded, color: Colors.white, size: 28),
+                              splashRadius: 24,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 24),
                         Text(
                           '${_getGreeting()},\n$namaAdmin! 👋',
                           style: const TextStyle(
@@ -1136,6 +1158,135 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           fontSize: 9,
           fontWeight: FontWeight.bold,
           color: Colors.black87,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDrawer(BuildContext context, WidgetRef ref, ThemeData theme) {
+    return Drawer(
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.only(
+          topRight: Radius.circular(32),
+          bottomRight: Radius.circular(32),
+        ),
+      ),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: const BorderRadius.only(
+            topRight: Radius.circular(32),
+            bottomRight: Radius.circular(32),
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: theme.primaryColor.withValues(alpha: 0.1),
+              blurRadius: 20,
+              offset: const Offset(5, 0),
+            ),
+          ],
+        ),
+        child: Column(
+          children: [
+            // Header Drawer
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.only(top: 60, bottom: 30, left: 24, right: 24),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [theme.primaryColor, theme.primaryColorDark],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: const BorderRadius.only(topRight: Radius.circular(32)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.2),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.account_circle_rounded,
+                      size: 48,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'Qurban Scanner',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      fontFamily: 'ElMessiri',
+                    ),
+                  ),
+                  const Text(
+                    'Panitia Qurban',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.white70,
+                      fontFamily: 'ElMessiri',
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+
+            // Item Logout
+            ListTile(
+              contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+              leading: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.red.shade50,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(Icons.logout_rounded, color: Colors.redAccent),
+              ),
+              title: const Text(
+                'Keluar / Logout',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.redAccent,
+                  fontFamily: 'ElMessiri',
+                ),
+              ),
+              onTap: () async {
+                Navigator.pop(context); // Tutup drawer
+                await ref.read(authServiceProvider).logout();
+              },
+            ),
+            const Spacer(),
+
+            // App Version
+            Padding(
+              padding: const EdgeInsets.only(bottom: 24),
+              child: FutureBuilder<PackageInfo>(
+                future: PackageInfo.fromPlatform(),
+                builder: (context, snapshot) {
+                  if (snapshot.hasData) {
+                    return Text(
+                      'Versi ${snapshot.data!.version}',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey.shade400,
+                        fontWeight: FontWeight.bold,
+                        fontFamily: 'ElMessiri',
+                      ),
+                    );
+                  }
+                  return const SizedBox();
+                },
+              ),
+            ),
+          ],
         ),
       ),
     );
