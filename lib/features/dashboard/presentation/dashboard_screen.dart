@@ -135,8 +135,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             return BackdropFilter(
               filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
               child: Center(
-                child: Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 24),
+                child: Material(
+                  type: MaterialType.transparency,
+                  child: Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 24),
                   padding: const EdgeInsets.all(28),
                   decoration: BoxDecoration(
                     color: Colors.white,
@@ -304,6 +306,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                       ),
                     ],
                   ),
+                ),
                 ),
               ),
             );
