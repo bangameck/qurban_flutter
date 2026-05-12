@@ -84,43 +84,8 @@ class DashboardScreen extends ConsumerStatefulWidget {
 
 class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
-  @override
-  void initState() {
-    super.initState();
-    // Cek koneksi server setelah frame pertama selesai render
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _pingServerOnInit();
-    });
-  }
-
-  // --- CEK KONEKSI SAAT PERTAMA BUKA ---
-  Future<void> _pingServerOnInit() async {
-    final baseUrl = ref.read(serverUrlProvider);
-    final token = prefs.getString(AppConstants.tokenKey);
-
-    try {
-      final response = await http
-          .get(
-            Uri.parse('$baseUrl/api/dashboard'),
-            headers: {
-              'Accept': 'application/json',
-              'Authorization': 'Bearer $token',
-            },
-          )
-          .timeout(const Duration(seconds: 4));
-
-      if (response.statusCode == 200) return; // Server OK, tidak perlu modal
-
-      // Server terjangkau tapi error (misal 404 / 401 / salah URL)
-      if (mounted) _showServerDownModal(isReachable: true, statusCode: response.statusCode);
-    } catch (_) {
-      // Koneksi mati total / timeout
-      if (mounted) _showServerDownModal(isReachable: false);
-    }
-  }
-
-  // --- MODAL PREMIUM: SERVER TIDAK TERJANGKAU ---
-  void _showServerDownModal({bool isReachable = false, int statusCode = 0}) {
+  // --- MODAL PREMIUM: KONFIGURASI IP SERVER ---
+  void _showChangeServerPremiumModal(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final urlController = TextEditingController(
       text: ref.read(serverUrlProvider),
@@ -128,7 +93,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
     showDialog(
       context: context,
-      barrierDismissible: false,
+      barrierDismissible: true,
       barrierColor: Colors.black.withValues(alpha: 0.7),
       builder: (ctx) {
         bool isSaving = false;
@@ -160,24 +125,20 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                       Container(
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: Colors.red.shade50,
+                          color: theme.primaryColor.withValues(alpha: 0.1),
                           shape: BoxShape.circle,
-                          border: Border.all(
-                            color: Colors.redAccent.withValues(alpha: 0.3),
-                            width: 2,
-                          ),
                         ),
                         child: Icon(
-                          isReachable ? Icons.link_off_rounded : Icons.wifi_off_rounded,
-                          size: 40,
-                          color: Colors.redAccent,
+                          Icons.dns_rounded,
+                          size: 48,
+                          color: theme.primaryColor,
                         ),
                       ),
                       const SizedBox(height: 20),
 
                       // Judul
                       const Text(
-                        'KONEKSI SERVER GAGAL',
+                        'KONFIGURASI SERVER',
                         style: TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w900,
@@ -187,12 +148,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                         ),
                       ),
                       const SizedBox(height: 8),
-                      Text(
-                        isReachable
-                            ? 'Server terjangkau tapi mengembalikan error HTTP $statusCode.\nPastikan URL sudah benar.'
-                            : 'Tidak dapat terhubung ke server.\nPastikan server menyala & IP sudah benar.',
+                      const Text(
+                        'Jika status indikator merah, silakan sesuaikan ulang IP / Domain server di bawah ini.',
                         textAlign: TextAlign.center,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 13,
                           color: Colors.black54,
                           height: 1.5,
@@ -298,7 +257,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                       TextButton(
                         onPressed: () => Navigator.pop(ctx),
                         child: Text(
-                          'Lanjutkan Dalam Mode Offline',
+                          'Batal',
                           style: TextStyle(
                             color: Colors.grey.shade500,
                             fontSize: 13,
@@ -324,99 +283,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     if (hour < 15) return 'Selamat Siang';
     if (hour < 18) return 'Selamat Sore';
     return 'Selamat Malam';
-  }
-
-  // --- MODAL DIALOG UBAH IP SERVER ---
-  void _showChangeServerDialog(BuildContext context, WidgetRef ref) {
-    final theme = Theme.of(context);
-    final currentUrl = ref.read(serverUrlProvider);
-    final urlController = TextEditingController(text: currentUrl);
-
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(24),
-          ),
-          title: const Text(
-            'Ubah Alamat Server',
-            style: TextStyle(
-              fontFamily: 'ElMessiri',
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text(
-                'Koneksi terputus. Jika IP Server berubah, silakan masukkan URL / IP yang baru di bawah ini.',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.grey,
-                  fontFamily: 'ElMessiri',
-                ),
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: urlController,
-                decoration: InputDecoration(
-                  labelText: 'URL Server',
-                  hintText: 'http://192.168.x.x:8000',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  prefixIcon: const Icon(Icons.link_rounded),
-                ),
-                style: const TextStyle(fontFamily: 'ElMessiri'),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text(
-                'Batal',
-                style: TextStyle(color: Colors.grey, fontFamily: 'ElMessiri'),
-              ),
-            ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: theme.primaryColor,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              onPressed: () async {
-                final newUrl = urlController.text.trim();
-                if (newUrl.isNotEmpty) {
-                  // PERBAIKAN 1: Pakai string manual 'server_url' agar tidak error AppConstants
-                  await prefs.setString('server_url', newUrl);
-
-                  // PERBAIKAN 2: Invalidate provider alih-alih mutasi state secara langsung
-                  ref.invalidate(serverUrlProvider);
-
-                  if (context.mounted) {
-                    Navigator.pop(context);
-                  }
-
-                  // Tarik ulang data dashboard dengan IP Baru!
-                  ref.invalidate(dashboardProvider);
-                }
-              },
-              child: const Text(
-                'Simpan & Hubungkan',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontFamily: 'ElMessiri',
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          ],
-        );
-      },
-    );
   }
 
   // --- LOGIKA TARIK DATA DARI SERVER KE ISAR ---
@@ -718,8 +584,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                             // BADGE INTERAKTIF (MERAH / HIJAU)
                         GestureDetector(
                           onTap: () {
-                            // Selalu bisa diklik biar kalau mau ganti IP gampang
-                            _showChangeServerDialog(context, ref);
+                            // Buka form premium untuk ganti IP
+                            _showChangeServerPremiumModal(context, ref);
                           },
                           child: AnimatedContainer(
                             duration: const Duration(milliseconds: 300),
