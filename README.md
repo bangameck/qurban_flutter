@@ -99,7 +99,7 @@ lib/
 
 ### Prasyarat
 - Flutter SDK **^3.11.5** sudah terinstall
-- Backend **Laravel Qurban App** sudah berjalan (lokal atau server)
+- Backend **[Laravel Qurban App](https://github.com/bangameck/qurban-app)** sudah berjalan (lokal atau server)
 
 ### Langkah Instalasi
 
