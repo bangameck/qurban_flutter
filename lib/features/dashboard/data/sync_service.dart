@@ -143,7 +143,8 @@ class SyncService {
         throw Exception('Server Error: ${response.statusCode}');
       }
     } catch (e) {
-      throw Exception('Gagal tarik data: $e');
+      developer.log('Error Pull: $e', name: 'SyncService');
+      throw Exception('Offline - Ketuk Indikator Status & Ubah IP Server');
     }
   }
 }

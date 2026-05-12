@@ -83,7 +83,6 @@ class DashboardScreen extends ConsumerStatefulWidget {
 }
 
 class _DashboardScreenState extends ConsumerState<DashboardScreen> {
-
   // --- MODAL PREMIUM: KONFIGURASI IP SERVER ---
   void _showChangeServerPremiumModal(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
@@ -106,168 +105,171 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   type: MaterialType.transparency,
                   child: Container(
                     margin: const EdgeInsets.symmetric(horizontal: 24),
-                  padding: const EdgeInsets.all(28),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(36),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.redAccent.withValues(alpha: 0.2),
-                        blurRadius: 60,
-                        spreadRadius: 10,
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      // Icon Status
-                      Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: theme.primaryColor.withValues(alpha: 0.1),
-                          shape: BoxShape.circle,
+                    padding: const EdgeInsets.all(28),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(36),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.redAccent.withValues(alpha: 0.2),
+                          blurRadius: 60,
+                          spreadRadius: 10,
                         ),
-                        child: Icon(
-                          Icons.dns_rounded,
-                          size: 48,
-                          color: theme.primaryColor,
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-
-                      // Judul
-                      const Text(
-                        'KONFIGURASI SERVER',
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w900,
-                          letterSpacing: 2,
-                          color: Colors.black54,
-                          fontFamily: 'ElMessiri',
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      const Text(
-                        'Jika status indikator merah, silakan sesuaikan ulang IP / Domain server di bawah ini.',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: Colors.black54,
-                          height: 1.5,
-                          fontFamily: 'ElMessiri',
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-
-                      // Input URL
-                      Container(
-                        decoration: BoxDecoration(
-                          color: Colors.grey.shade50,
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: Colors.grey.shade200),
-                        ),
-                        child: TextField(
-                          controller: urlController,
-                          keyboardType: TextInputType.url,
-                          style: const TextStyle(
-                            fontFamily: 'ElMessiri',
-                            fontWeight: FontWeight.bold,
-                            fontSize: 14,
+                      ],
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        // Icon Status
+                        Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: theme.primaryColor.withValues(alpha: 0.1),
+                            shape: BoxShape.circle,
                           ),
-                          decoration: InputDecoration(
-                            hintText: 'http://192.168.x.x:8000',
-                            hintStyle: TextStyle(
-                              color: Colors.grey.shade400,
-                              fontFamily: 'ElMessiri',
-                            ),
-                            prefixIcon: Icon(
-                              Icons.dns_rounded,
-                              color: theme.primaryColor,
-                            ),
-                            border: InputBorder.none,
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 16,
-                            ),
+                          child: Icon(
+                            Icons.dns_rounded,
+                            size: 48,
+                            color: theme.primaryColor,
                           ),
                         ),
-                      ),
-                      const SizedBox(height: 8),
-                      Align(
-                        alignment: Alignment.centerLeft,
-                        child: Text(
-                          '💡 Emulator: http://10.0.2.2:8000  |  HP: http://192.168.x.x:8000',
+                        const SizedBox(height: 20),
+
+                        // Judul
+                        const Text(
+                          'KONFIGURASI SERVER',
                           style: TextStyle(
-                            fontSize: 10,
-                            color: Colors.grey.shade500,
-                            fontFamily: 'ElMessiri',
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-
-                      // Tombol Simpan
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton.icon(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: theme.primaryColor,
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                            elevation: 0,
-                          ),
-                          onPressed: isSaving
-                              ? null
-                              : () async {
-                                  final newUrl = urlController.text.trim();
-                                  if (newUrl.isEmpty) return;
-                                  setModalState(() => isSaving = true);
-                                  await prefs.setString('server_url', newUrl);
-                                  ref.invalidate(serverUrlProvider);
-                                  ref.invalidate(dashboardProvider);
-                                  if (ctx.mounted) Navigator.pop(ctx);
-                                },
-                          icon: isSaving
-                              ? const SizedBox(
-                                  width: 18,
-                                  height: 18,
-                                  child: CircularProgressIndicator(
-                                    color: Colors.white,
-                                    strokeWidth: 2,
-                                  ),
-                                )
-                              : const Icon(Icons.save_rounded, color: Colors.white),
-                          label: Text(
-                            isSaving ? 'Menyimpan...' : 'Simpan & Hubungkan',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                              fontFamily: 'ElMessiri',
-                              fontSize: 15,
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-
-                      // Tombol Lanjutkan Offline
-                      TextButton(
-                        onPressed: () => Navigator.pop(ctx),
-                        child: Text(
-                          'Batal',
-                          style: TextStyle(
-                            color: Colors.grey.shade500,
                             fontSize: 13,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 2,
+                            color: Colors.black54,
                             fontFamily: 'ElMessiri',
                           ),
                         ),
-                      ),
-                    ],
+                        const SizedBox(height: 8),
+                        const Text(
+                          'Jika status indikator merah, silakan sesuaikan ulang IP / Domain server di bawah ini.',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: Colors.black54,
+                            height: 1.5,
+                            fontFamily: 'ElMessiri',
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+
+                        // Input URL
+                        Container(
+                          decoration: BoxDecoration(
+                            color: Colors.grey.shade50,
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(color: Colors.grey.shade200),
+                          ),
+                          child: TextField(
+                            controller: urlController,
+                            keyboardType: TextInputType.url,
+                            style: const TextStyle(
+                              fontFamily: 'ElMessiri',
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                            ),
+                            decoration: InputDecoration(
+                              hintText: 'http://192.168.x.x:8000',
+                              hintStyle: TextStyle(
+                                color: Colors.grey.shade400,
+                                fontFamily: 'ElMessiri',
+                              ),
+                              prefixIcon: Icon(
+                                Icons.dns_rounded,
+                                color: theme.primaryColor,
+                              ),
+                              border: InputBorder.none,
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 16,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            '💡 Emulator: http://10.0.2.2:8000  |  HP: http://192.168.x.x:8000',
+                            style: TextStyle(
+                              fontSize: 10,
+                              color: Colors.grey.shade500,
+                              fontFamily: 'ElMessiri',
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+
+                        // Tombol Simpan
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton.icon(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: theme.primaryColor,
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              elevation: 0,
+                            ),
+                            onPressed: isSaving
+                                ? null
+                                : () async {
+                                    final newUrl = urlController.text.trim();
+                                    if (newUrl.isEmpty) return;
+                                    setModalState(() => isSaving = true);
+                                    await prefs.setString('server_url', newUrl);
+                                    ref.invalidate(serverUrlProvider);
+                                    ref.invalidate(dashboardProvider);
+                                    if (ctx.mounted) Navigator.pop(ctx);
+                                  },
+                            icon: isSaving
+                                ? const SizedBox(
+                                    width: 18,
+                                    height: 18,
+                                    child: CircularProgressIndicator(
+                                      color: Colors.white,
+                                      strokeWidth: 2,
+                                    ),
+                                  )
+                                : const Icon(
+                                    Icons.save_rounded,
+                                    color: Colors.white,
+                                  ),
+                            label: Text(
+                              isSaving ? 'Menyimpan...' : 'Simpan & Hubungkan',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontFamily: 'ElMessiri',
+                                fontSize: 15,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+
+                        // Tombol Lanjutkan Offline
+                        TextButton(
+                          onPressed: () => Navigator.pop(ctx),
+                          child: Text(
+                            'Batal',
+                            style: TextStyle(
+                              color: Colors.grey.shade500,
+                              fontSize: 13,
+                              fontFamily: 'ElMessiri',
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
                 ),
               ),
             );
@@ -324,17 +326,32 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: theme.primaryColor.withValues(alpha: 0.1),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    Icons.cloud_sync_rounded,
-                    color: theme.primaryColor,
-                    size: 48,
-                  ),
+                Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    SizedBox(
+                      width: 90,
+                      height: 90,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          theme.primaryColor.withValues(alpha: 0.5),
+                        ),
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.all(18),
+                      decoration: BoxDecoration(
+                        color: theme.primaryColor.withValues(alpha: 0.1),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        Icons.cloud_sync_rounded,
+                        color: theme.primaryColor,
+                        size: 42,
+                      ),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 24),
                 const Text(
@@ -410,7 +427,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                                   AnimatedContainer(
                                     duration: const Duration(milliseconds: 300),
                                     curve: Curves.easeOutCubic,
-                                    width: constraints.maxWidth * progress,
+                                    width: (constraints.maxWidth * progress)
+                                        .clamp(0.0, constraints.maxWidth),
                                     height: 14,
                                     decoration: BoxDecoration(
                                       gradient: LinearGradient(
@@ -433,6 +451,34 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                                           offset: const Offset(0, 2),
                                         ),
                                       ],
+                                    ),
+                                  ),
+                                  AnimatedPositioned(
+                                    duration: const Duration(milliseconds: 300),
+                                    curve: Curves.easeOutCubic,
+                                    left:
+                                        ((constraints.maxWidth * progress) - 14)
+                                            .clamp(0.0, constraints.maxWidth),
+                                    top: 0,
+                                    child: Opacity(
+                                      opacity: progress > 0.05 ? 1.0 : 0.0,
+                                      child: Container(
+                                        width: 14,
+                                        height: 14,
+                                        decoration: BoxDecoration(
+                                          color: Colors.white,
+                                          shape: BoxShape.circle,
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: Colors.white.withValues(
+                                                alpha: 0.8,
+                                              ),
+                                              blurRadius: 6,
+                                              spreadRadius: 2,
+                                            ),
+                                          ],
+                                        ),
+                                      ),
                                     ),
                                   ),
                                 ],
@@ -582,74 +628,78 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             // BADGE INTERAKTIF (MERAH / HIJAU)
-                        GestureDetector(
-                          onTap: () {
-                            // Buka form premium untuk ganti IP
-                            _showChangeServerPremiumModal(context, ref);
-                          },
-                          child: AnimatedContainer(
-                            duration: const Duration(milliseconds: 300),
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 6,
-                            ),
-                            decoration: BoxDecoration(
-                              color: isOnline
-                                  ? Colors.white.withValues(alpha: 0.2)
-                                  : Colors.redAccent.withValues(
-                                      alpha: 0.9,
-                                    ), // Merah Menyala jika Error
-                              borderRadius: BorderRadius.circular(20),
-                              border: isOnline
-                                  ? null
-                                  : Border.all(color: Colors.white54),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Container(
-                                  width: 8,
-                                  height: 8,
-                                  decoration: BoxDecoration(
-                                    color: isOnline
-                                        ? Colors.greenAccent
-                                        : Colors.white,
-                                    shape: BoxShape.circle,
-                                    boxShadow: [
-                                      if (!isOnline)
-                                        const BoxShadow(
-                                          color: Colors.white,
-                                          blurRadius: 4,
-                                        ),
-                                    ],
-                                  ),
+                            GestureDetector(
+                              onTap: () {
+                                // Buka form premium untuk ganti IP
+                                _showChangeServerPremiumModal(context, ref);
+                              },
+                              child: AnimatedContainer(
+                                duration: const Duration(milliseconds: 300),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 6,
                                 ),
-                                const SizedBox(width: 8),
-                                Text(
-                                  isOnline
-                                      ? 'Sistem Qurban $tahun Online'
-                                      : 'Offline - Ketuk Ubah IP Server',
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.bold,
-                                  ),
+                                decoration: BoxDecoration(
+                                  color: isOnline
+                                      ? Colors.white.withValues(alpha: 0.2)
+                                      : Colors.redAccent.withValues(
+                                          alpha: 0.9,
+                                        ), // Merah Menyala jika Error
+                                  borderRadius: BorderRadius.circular(20),
+                                  border: isOnline
+                                      ? null
+                                      : Border.all(color: Colors.white54),
                                 ),
-                              ],
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Container(
+                                      width: 8,
+                                      height: 8,
+                                      decoration: BoxDecoration(
+                                        color: isOnline
+                                            ? Colors.greenAccent
+                                            : Colors.white,
+                                        shape: BoxShape.circle,
+                                        boxShadow: [
+                                          if (!isOnline)
+                                            const BoxShadow(
+                                              color: Colors.white,
+                                              blurRadius: 4,
+                                            ),
+                                        ],
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      isOnline
+                                          ? 'Sistem Qurban $tahun Online'
+                                          : 'Offline - Ketuk Ubah IP Server',
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
                             ),
-                          ),
+                            // TOMBOL BURGER MENU
+                            Builder(
+                              builder: (ctx) => IconButton(
+                                onPressed: () => Scaffold.of(ctx).openDrawer(),
+                                icon: const Icon(
+                                  Icons.menu_rounded,
+                                  color: Colors.white,
+                                  size: 28,
+                                ),
+                                splashRadius: 24,
+                              ),
+                            ),
+                          ],
                         ),
-                          // TOMBOL BURGER MENU
-                          Builder(
-                            builder: (ctx) => IconButton(
-                              onPressed: () => Scaffold.of(ctx).openDrawer(),
-                              icon: const Icon(Icons.menu_rounded, color: Colors.white, size: 28),
-                              splashRadius: 24,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 24),
+                        const SizedBox(height: 24),
                         Text(
                           '${_getGreeting()},\n$namaAdmin! 👋',
                           style: const TextStyle(
@@ -1111,12 +1161,16 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                             Expanded(
                               child: TextButton(
                                 style: TextButton.styleFrom(
-                                  padding: const EdgeInsets.symmetric(vertical: 16),
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 16,
+                                  ),
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(16),
                                   ),
                                 ),
-                                onPressed: isLoggingOut ? null : () => Navigator.pop(ctx),
+                                onPressed: isLoggingOut
+                                    ? null
+                                    : () => Navigator.pop(ctx),
                                 child: Text(
                                   'Batal',
                                   style: TextStyle(
@@ -1132,7 +1186,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                               child: ElevatedButton(
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: Colors.redAccent,
-                                  padding: const EdgeInsets.symmetric(vertical: 16),
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 16,
+                                  ),
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(16),
                                   ),
@@ -1141,14 +1197,21 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                                 onPressed: isLoggingOut
                                     ? null
                                     : () async {
-                                        setModalState(() => isLoggingOut = true);
-                                        await ref.read(authServiceProvider).logout();
+                                        setModalState(
+                                          () => isLoggingOut = true,
+                                        );
+                                        await ref
+                                            .read(authServiceProvider)
+                                            .logout();
                                         if (ctx.mounted) {
                                           Navigator.pop(ctx); // Tutup modal
-                                          Navigator.pop(context); // Tutup drawer
+                                          Navigator.pop(
+                                            context,
+                                          ); // Tutup drawer
                                           Navigator.of(context).pushReplacement(
                                             MaterialPageRoute(
-                                              builder: (context) => const LoginScreen(),
+                                              builder: (context) =>
+                                                  const LoginScreen(),
                                             ),
                                           );
                                         }
@@ -1220,14 +1283,21 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             // Header Drawer
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.only(top: 60, bottom: 30, left: 24, right: 24),
+              padding: const EdgeInsets.only(
+                top: 60,
+                bottom: 30,
+                left: 24,
+                right: 24,
+              ),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [theme.primaryColor, theme.primaryColorDark],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
-                borderRadius: const BorderRadius.only(topRight: Radius.circular(32)),
+                borderRadius: const BorderRadius.only(
+                  topRight: Radius.circular(32),
+                ),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -1238,10 +1308,15 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.2),
                       shape: BoxShape.circle,
-                      border: Border.all(color: Colors.white.withValues(alpha: 0.5), width: 2),
+                      border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.5),
+                        width: 2,
+                      ),
                       image: userAvatar.isNotEmpty
                           ? DecorationImage(
-                              image: NetworkImage('$baseUrl/storage/$userAvatar'),
+                              image: NetworkImage(
+                                '$baseUrl/storage/$userAvatar',
+                              ),
                               fit: BoxFit.cover,
                             )
                           : null,
@@ -1287,14 +1362,20 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
             // Item Logout
             ListTile(
-              contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 24,
+                vertical: 8,
+              ),
               leading: Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
                   color: Colors.red.shade50,
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: const Icon(Icons.logout_rounded, color: Colors.redAccent),
+                child: const Icon(
+                  Icons.logout_rounded,
+                  color: Colors.redAccent,
+                ),
               ),
               title: const Text(
                 'Keluar / Logout',
