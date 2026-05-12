@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:developer' as developer;
 import 'package:flutter_riverpod/flutter_riverpod.dart'; // Import Riverpod
 import 'package:http/http.dart' as http;
 import 'package:isar/isar.dart';
@@ -80,12 +81,12 @@ class ScanService {
         isSyncedSuccess = true;
       } else {
         // CCTV: Kalau server jawab tapi bukan 200 (misal 500 atau 404)
-        print('Server Error: ${response.statusCode}');
-        print('Server Body: ${response.body}');
+        developer.log('Server Error: ${response.statusCode}', name: 'ScanService');
+        developer.log('Server Body: ${response.body}', name: 'ScanService');
       }
     } catch (e) {
       // CCTV: Kalau koneksi gagal total (RTO atau salah IP)
-      print('Koneksi Gagal/Timeout: $e');
+      developer.log('Koneksi Gagal/Timeout: $e', name: 'ScanService');
       isSyncedSuccess = false;
     }
 
