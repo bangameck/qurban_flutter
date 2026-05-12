@@ -38,10 +38,16 @@ final dashboardProvider = FutureProvider.autoDispose<Map<String, dynamic>>((
       final data = jsonDecode(response.body);
       data['is_online'] = true;
       return data;
+    } else {
+      // Server terjangkau tapi response error (404, 401, 500, dll)
+      developer.log(
+        'Server error: HTTP ${response.statusCode}. Fallback ke cache.',
+        name: 'Dashboard',
+      );
     }
   } catch (e) {
     developer.log(
-      'Server tidak terjangkau. Menggunakan Mode Offline.',
+      'Server tidak terjangkau (${e.runtimeType}). Menggunakan Mode Offline.',
       name: 'Dashboard',
     );
   }
@@ -67,8 +73,245 @@ final dashboardProvider = FutureProvider.autoDispose<Map<String, dynamic>>((
   };
 });
 
-class DashboardScreen extends ConsumerWidget {
+class DashboardScreen extends ConsumerStatefulWidget {
   const DashboardScreen({super.key});
+
+  @override
+  ConsumerState<DashboardScreen> createState() => _DashboardScreenState();
+}
+
+class _DashboardScreenState extends ConsumerState<DashboardScreen> {
+
+  @override
+  void initState() {
+    super.initState();
+    // Cek koneksi server setelah frame pertama selesai render
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _pingServerOnInit();
+    });
+  }
+
+  // --- CEK KONEKSI SAAT PERTAMA BUKA ---
+  Future<void> _pingServerOnInit() async {
+    final baseUrl = ref.read(serverUrlProvider);
+    final token = prefs.getString(AppConstants.tokenKey);
+
+    try {
+      final response = await http
+          .get(
+            Uri.parse('$baseUrl/api/dashboard'),
+            headers: {
+              'Accept': 'application/json',
+              'Authorization': 'Bearer $token',
+            },
+          )
+          .timeout(const Duration(seconds: 4));
+
+      if (response.statusCode == 200) return; // Server OK, tidak perlu modal
+
+      // Server terjangkau tapi error (misal 404 / 401 / salah URL)
+      if (mounted) _showServerDownModal(isReachable: true, statusCode: response.statusCode);
+    } catch (_) {
+      // Koneksi mati total / timeout
+      if (mounted) _showServerDownModal(isReachable: false);
+    }
+  }
+
+  // --- MODAL PREMIUM: SERVER TIDAK TERJANGKAU ---
+  void _showServerDownModal({bool isReachable = false, int statusCode = 0}) {
+    final theme = Theme.of(context);
+    final urlController = TextEditingController(
+      text: ref.read(serverUrlProvider),
+    );
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      barrierColor: Colors.black.withValues(alpha: 0.7),
+      builder: (ctx) {
+        bool isSaving = false;
+        return StatefulBuilder(
+          builder: (ctx, setModalState) {
+            return BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+              child: Center(
+                child: Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 24),
+                  padding: const EdgeInsets.all(28),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(36),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.redAccent.withValues(alpha: 0.2),
+                        blurRadius: 60,
+                        spreadRadius: 10,
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // Icon Status
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.red.shade50,
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: Colors.redAccent.withValues(alpha: 0.3),
+                            width: 2,
+                          ),
+                        ),
+                        child: Icon(
+                          isReachable ? Icons.link_off_rounded : Icons.wifi_off_rounded,
+                          size: 40,
+                          color: Colors.redAccent,
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+
+                      // Judul
+                      const Text(
+                        'KONEKSI SERVER GAGAL',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: 2,
+                          color: Colors.black54,
+                          fontFamily: 'ElMessiri',
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        isReachable
+                            ? 'Server terjangkau tapi mengembalikan error HTTP $statusCode.\nPastikan URL sudah benar.'
+                            : 'Tidak dapat terhubung ke server.\nPastikan server menyala & IP sudah benar.',
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          fontSize: 13,
+                          color: Colors.black54,
+                          height: 1.5,
+                          fontFamily: 'ElMessiri',
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+
+                      // Input URL
+                      Container(
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade50,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: Colors.grey.shade200),
+                        ),
+                        child: TextField(
+                          controller: urlController,
+                          keyboardType: TextInputType.url,
+                          style: const TextStyle(
+                            fontFamily: 'ElMessiri',
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                          ),
+                          decoration: InputDecoration(
+                            hintText: 'http://192.168.x.x:8000',
+                            hintStyle: TextStyle(
+                              color: Colors.grey.shade400,
+                              fontFamily: 'ElMessiri',
+                            ),
+                            prefixIcon: Icon(
+                              Icons.dns_rounded,
+                              color: theme.primaryColor,
+                            ),
+                            border: InputBorder.none,
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 16,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          '💡 Emulator: http://10.0.2.2:8000  |  HP: http://192.168.x.x:8000',
+                          style: TextStyle(
+                            fontSize: 10,
+                            color: Colors.grey.shade500,
+                            fontFamily: 'ElMessiri',
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+
+                      // Tombol Simpan
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton.icon(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: theme.primaryColor,
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            elevation: 0,
+                          ),
+                          onPressed: isSaving
+                              ? null
+                              : () async {
+                                  final newUrl = urlController.text.trim();
+                                  if (newUrl.isEmpty) return;
+                                  setModalState(() => isSaving = true);
+                                  await prefs.setString('server_url', newUrl);
+                                  ref.invalidate(serverUrlProvider);
+                                  ref.invalidate(dashboardProvider);
+                                  if (ctx.mounted) Navigator.pop(ctx);
+                                },
+                          icon: isSaving
+                              ? const SizedBox(
+                                  width: 18,
+                                  height: 18,
+                                  child: CircularProgressIndicator(
+                                    color: Colors.white,
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : const Icon(Icons.save_rounded, color: Colors.white),
+                          label: Text(
+                            isSaving ? 'Menyimpan...' : 'Simpan & Hubungkan',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontFamily: 'ElMessiri',
+                              fontSize: 15,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+
+                      // Tombol Lanjutkan Offline
+                      TextButton(
+                        onPressed: () => Navigator.pop(ctx),
+                        child: Text(
+                          'Lanjutkan Dalam Mode Offline',
+                          style: TextStyle(
+                            color: Colors.grey.shade500,
+                            fontSize: 13,
+                            fontFamily: 'ElMessiri',
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
 
   String _getGreeting() {
     final hour = DateTime.now().hour;
@@ -374,7 +617,7 @@ class DashboardScreen extends ConsumerWidget {
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final dashboardAsync = ref.watch(dashboardProvider);
 
