@@ -136,6 +136,15 @@ class AuthService {
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         await prefs.setString('auth_token', data['token']);
+        
+        // Simpan data user untuk drawer
+        if (data['user'] != null) {
+          final user = data['user'];
+          await prefs.setString('user_name', user['nama_warga'] ?? user['name'] ?? 'Panitia');
+          await prefs.setString('user_phone', user['phone_number'] ?? '');
+          await prefs.setString('user_avatar', user['avatar'] ?? '');
+        }
+
         developer.log('Login successful, token saved.', name: 'AuthService');
         return true;
       } else {
@@ -174,8 +183,26 @@ class AuthService {
   }
 
   Future<void> logout() async {
-    await prefs.remove('auth_token');
-    developer.log('User logged out', name: 'AuthService');
+    try {
+      final token = prefs.getString('auth_token');
+      if (token != null) {
+        await http.post(
+          Uri.parse('$baseUrl/api/logout'),
+          headers: {
+            'Accept': 'application/json',
+            'Authorization': 'Bearer $token',
+          },
+        ).timeout(const Duration(seconds: 5));
+      }
+    } catch (_) {
+      // Abaikan error (misal sedang offline saat logout)
+    } finally {
+      await prefs.remove('auth_token');
+      await prefs.remove('user_name');
+      await prefs.remove('user_phone');
+      await prefs.remove('user_avatar');
+      developer.log('User logged out', name: 'AuthService');
+    }
   }
 
   bool isLoggedIn() {

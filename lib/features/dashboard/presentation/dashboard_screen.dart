@@ -8,6 +8,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../auth/data/auth_service.dart';
+import '../../auth/presentation/login_screen.dart';
 import '../../../main.dart';
 import '../../scanner/presentation/scanner_screen.dart';
 import '../data/sync_service.dart';
@@ -1163,7 +1164,169 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     );
   }
 
+  void _showLogoutModal(BuildContext context, WidgetRef ref) {
+    showDialog(
+      context: context,
+      barrierColor: Colors.black.withValues(alpha: 0.6),
+      builder: (ctx) {
+        bool isLoggingOut = false;
+        return StatefulBuilder(
+          builder: (ctx, setModalState) {
+            return BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+              child: Center(
+                child: Material(
+                  type: MaterialType.transparency,
+                  child: Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 24),
+                    padding: const EdgeInsets.all(28),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.9),
+                      borderRadius: BorderRadius.circular(40),
+                      border: Border.all(color: Colors.white, width: 2),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.redAccent.withValues(alpha: 0.2),
+                          blurRadius: 50,
+                          spreadRadius: 10,
+                        ),
+                        BoxShadow(
+                          color: Colors.white.withValues(alpha: 0.5),
+                          blurRadius: 20,
+                          spreadRadius: -5,
+                          offset: const Offset(-5, -5),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: Colors.red.shade50,
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: Colors.redAccent.withValues(alpha: 0.3),
+                              width: 2,
+                            ),
+                          ),
+                          child: const Icon(
+                            Icons.logout_rounded,
+                            size: 40,
+                            color: Colors.redAccent,
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                        const Text(
+                          'KONFIRMASI LOGOUT',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 2,
+                            color: Colors.black54,
+                            fontFamily: 'ElMessiri',
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        const Text(
+                          'Apakah Anda yakin ingin keluar dari aplikasi?\nData lokal yang belum disinkronkan mungkin hilang.',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: Colors.black54,
+                            height: 1.5,
+                            fontFamily: 'ElMessiri',
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: TextButton(
+                                style: TextButton.styleFrom(
+                                  padding: const EdgeInsets.symmetric(vertical: 16),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
+                                ),
+                                onPressed: isLoggingOut ? null : () => Navigator.pop(ctx),
+                                child: Text(
+                                  'Batal',
+                                  style: TextStyle(
+                                    color: Colors.grey.shade600,
+                                    fontWeight: FontWeight.bold,
+                                    fontFamily: 'ElMessiri',
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.redAccent,
+                                  padding: const EdgeInsets.symmetric(vertical: 16),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
+                                  elevation: 0,
+                                ),
+                                onPressed: isLoggingOut
+                                    ? null
+                                    : () async {
+                                        setModalState(() => isLoggingOut = true);
+                                        await ref.read(authServiceProvider).logout();
+                                        if (ctx.mounted) {
+                                          Navigator.pop(ctx); // Tutup modal
+                                          Navigator.pop(context); // Tutup drawer
+                                          Navigator.of(context).pushReplacement(
+                                            MaterialPageRoute(
+                                              builder: (context) => const LoginScreen(),
+                                            ),
+                                          );
+                                        }
+                                      },
+                                child: isLoggingOut
+                                    ? const SizedBox(
+                                        width: 18,
+                                        height: 18,
+                                        child: CircularProgressIndicator(
+                                          color: Colors.white,
+                                          strokeWidth: 2,
+                                        ),
+                                      )
+                                    : const Text(
+                                        'Ya, Keluar',
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.bold,
+                                          fontFamily: 'ElMessiri',
+                                        ),
+                                      ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
   Widget _buildDrawer(BuildContext context, WidgetRef ref, ThemeData theme) {
+    final userName = prefs.getString('user_name') ?? 'Panitia Qurban';
+    final userPhone = prefs.getString('user_phone') ?? 'Belum ada nomor';
+    final userAvatar = prefs.getString('user_avatar') ?? '';
+    final initialName = userName.isNotEmpty ? userName[0].toUpperCase() : 'P';
+    final baseUrl = ref.watch(serverUrlProvider);
+
     return Drawer(
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.only(
@@ -1204,30 +1367,48 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Container(
-                    padding: const EdgeInsets.all(12),
+                    width: 64,
+                    height: 64,
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.2),
                       shape: BoxShape.circle,
+                      border: Border.all(color: Colors.white.withValues(alpha: 0.5), width: 2),
+                      image: userAvatar.isNotEmpty
+                          ? DecorationImage(
+                              image: NetworkImage('$baseUrl/storage/$userAvatar'),
+                              fit: BoxFit.cover,
+                            )
+                          : null,
                     ),
-                    child: const Icon(
-                      Icons.account_circle_rounded,
-                      size: 48,
-                      color: Colors.white,
-                    ),
+                    child: userAvatar.isEmpty
+                        ? Center(
+                            child: Text(
+                              initialName,
+                              style: const TextStyle(
+                                fontSize: 28,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                                fontFamily: 'ElMessiri',
+                              ),
+                            ),
+                          )
+                        : null,
                   ),
                   const SizedBox(height: 16),
-                  const Text(
-                    'Qurban Scanner',
-                    style: TextStyle(
+                  Text(
+                    userName,
+                    style: const TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
                       fontFamily: 'ElMessiri',
                     ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                  const Text(
-                    'Panitia Qurban',
-                    style: TextStyle(
+                  Text(
+                    userPhone,
+                    style: const TextStyle(
                       fontSize: 14,
                       color: Colors.white70,
                       fontFamily: 'ElMessiri',
@@ -1258,9 +1439,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   fontFamily: 'ElMessiri',
                 ),
               ),
-              onTap: () async {
-                Navigator.pop(context); // Tutup drawer
-                await ref.read(authServiceProvider).logout();
+              onTap: () {
+                _showLogoutModal(context, ref);
               },
             ),
             const Spacer(),
